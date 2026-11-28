@@ -1,6 +1,6 @@
 # SecondLife AI backend
 
-I owns the photo analysis endpoint. Deploy the Vercel Node function from the repository root. Set `GEMINI_API_KEY` in the server environment. `GEMINI_MODEL` optionally overrides `gemini-3.1-flash-lite`. Verify free-tier availability and quota in Google AI Studio.
+developer 2 owns the photo analysis endpoint. Deploy the Vercel Node function from the repository root. Set `GEMINI_API_KEY` in the server environment. `GEMINI_MODEL` optionally overrides `gemini-3.1-flash-lite`. Verify free-tier availability and quota in Google AI Studio.
 
 ## Frontend contract
 
