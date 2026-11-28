@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Find practical ways to upcycle the things you already own.">
+  <title>SecondLife AI</title>
+  <style>
+    :root { color-scheme: light; --paper:#f8f7f1; --ink:#222e24; --muted:#526156; --green:#27533d; --line:#d6ded3; --sage:#e4ede2; font: 100%/1.55 system-ui,sans-serif; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); }
+    [hidden] { display:none !important; }
+    header { background:#fff; border-bottom:1px solid var(--line); }
+    .bar, main { width:min(70rem, calc(100% - 2rem)); margin:auto; }
+    .bar { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:.5rem 1rem; padding:1rem 0; }
+    .bar-start { display:none; gap:.75rem; align-items:center; }
+    .brand { font-weight:750; }
+    .shell { --rail:5rem; min-height:100vh; padding-left:var(--rail); }
+    .shell[data-expanded] { --rail:15rem; }
+    .sidebar { position:fixed; z-index:2; inset:0 auto 0 0; width:var(--rail); overflow:auto; background:#eef2ea; border-right:1px solid var(--line); padding:1rem .65rem; }
+    .sidebar nav { display:grid; gap:.3rem; }
+    .sidebar hr { width:100%; margin:.65rem 0; border:0; border-top:1px solid var(--line); }
+    .rail-button { display:flex; align-items:center; justify-content:center; gap:.7rem; width:100%; min-height:2.75rem; padding:.55rem; border:0; background:transparent; color:var(--green); text-align:left; white-space:nowrap; }
+    .rail-button svg, .menu-toggle svg { width:1.15rem; height:1.15rem; flex:none; fill:none; stroke:currentColor; stroke-width:1.55; stroke-linecap:round; stroke-linejoin:round; }
+    .rail-button span { display:none; }
+    .nav-caption, .rail-tagline { display:none; }
+    .shell[data-expanded] :is(.nav-caption,.rail-tagline) { display:block; }
+    .nav-caption, .rail-tagline { color:var(--muted); font-size:.875rem; margin:.4rem .55rem; }
+    .drawer-backdrop { display:none; }
+    .shell[data-expanded] .rail-button { justify-content:flex-start; }
+    .shell[data-expanded] .rail-button span { display:inline; }
+    .rail-button[aria-current], .rail-brand { background:#dbe7db; }
+    .rail-brand { margin-bottom:.45rem; }
+    .rail-button:disabled { opacity:.52; cursor:default; }
+    .menu-toggle { display:none; padding:.5rem; line-height:0; }
+    .view-name { font-weight:650; }
+    details summary { cursor:pointer; font-weight:650; }
+    main { padding:clamp(2rem, 7vw, 5rem) 0 4rem; }
+    h1,h2,h3 { font-family:Georgia,serif; font-weight:500; line-height:1.08; margin:0; overflow-wrap:anywhere; }
+    h1,h2 { font-size:clamp(2.25rem, 6.5vw, 4.3rem); letter-spacing:-.045em; }
+    h3 { font-size:1.6rem; }
+    p { overflow-wrap:anywhere; }
+    .intro { text-align:center; max-width:42rem; margin:0 auto 2rem; }
+    .intro p, .muted, figcaption { color:var(--muted); }
+    .narrow { max-width:43rem; margin-inline:auto; }
+    .panel, .card { background:#fff; border:1px solid var(--line); border-radius:1rem; padding:clamp(1rem,4vw,2rem); }
+    .drop { text-align:center; border:1px dashed #879e8c; border-radius:.75rem; background:#fcfdf9; padding:clamp(1.25rem,5vw,3rem) 1rem; }
+    .drop[data-drag] { background:var(--sage); }
+    .notice { color:var(--muted); font-size:.875rem; margin-bottom:1.25rem; }
+    button, .button { display:inline-block; border:1px solid var(--green); background:var(--green); color:#fff; border-radius:.55rem; padding:.68rem 1.05rem; font:inherit; font-weight:650; cursor:pointer; text-align:center; }
+    button:hover, .button:hover { filter:brightness(.92); }
+    button:disabled { opacity:.65; cursor:wait; }
+    .secondary { background:#fff; color:var(--green); }
+    :focus-visible { outline:3px solid #627d39; outline-offset:3px; }
+    .file-input { position:absolute; width:1px; height:1px; padding:0; clip-path:inset(50%); overflow:hidden; white-space:nowrap; }
+    .file-input:focus-visible + label { outline:3px solid #627d39; outline-offset:3px; }
+    .photo-row { display:flex; gap:1rem; flex-wrap:wrap; align-items:center; background:var(--sage); border-radius:.75rem; padding:1rem; }
+    .photo-row img { width:5rem; height:5rem; object-fit:cover; border-radius:.5rem; }
+    .photo-row strong { display:block; overflow-wrap:anywhere; }
+    .fields, .comparison, .guide { display:grid; gap:1rem; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .field { display:grid; gap:.35rem; margin:1rem 0; }
+    .field label { font-weight:650; }
+    fieldset.field { border:0; padding:0; min-width:0; }
+    fieldset.field legend { font-weight:650; margin-bottom:.35rem; padding:0; }
+    .difficulty-options { display:flex; flex-wrap:wrap; gap:.45rem; }
+    .difficulty-options label { display:inline-flex; align-items:center; gap:.35rem; background:var(--paper); border-radius:.45rem; padding:.35rem .55rem; cursor:pointer; }
+    .difficulty-options label:has(:checked) { background:#dbe7db; color:var(--green); }
+    .difficulty-options input { width:auto; accent-color:var(--green); }
+    input:is([type=number],:not([type])), select, textarea { width:100%; border:1px solid #a5b5a8; border-radius:.55rem; padding:.65rem .75rem; background:#fff; font:inherit; color:inherit; }
+    select { appearance:none; padding-right:2.25rem; background:#fff right .75rem center / .85rem no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%2327533d' stroke-linecap='round'/%3E%3C/svg%3E"); }
+    .picker-trigger { width:100%; display:flex; justify-content:space-between; align-items:center; background:#fff; color:var(--ink); text-align:left; border-color:#a5b5a8; font-weight:400; }
+    .picker-trigger::after { content:'⌄'; color:var(--green); }
+    .picker-options { display:grid; gap:.2rem; margin-top:.65rem; }
+    .picker-options button { background:#fff; color:var(--ink); text-align:left; font-weight:400; border-color:transparent; }
+    .picker-options button[aria-pressed=true] { background:var(--sage); color:var(--green); font-weight:650; }
+    textarea { resize:vertical; }
+    .card-grid { display:grid; gap:1rem; grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .card { display:flex; flex-direction:column; }
+    .card button { margin-top:auto; align-self:start; }
+    .facts { font-weight:650; color:var(--green); }
+    .metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem; padding:0; }
+    .metrics div { background:#eef2ea; border-radius:.55rem; padding:.65rem; }
+    .metrics dt { color:var(--muted); font-size:.875rem; }
+    .metrics dd { margin:0; font-weight:650; }
+    .summary-photo { margin-bottom:1rem; }
+    .summary-photo button { margin-left:auto; }
+    .safety-callout { background:#dbe7db; border-radius:.7rem; padding:1rem; }
+    .safety-callout p { margin:.3rem 0; }
+    .accordion { padding:.8rem 1rem; margin-top:.65rem; }
+    .accordion summary { list-style:none; display:flex; justify-content:space-between; gap:1rem; }
+    .accordion summary::after { content:'⌄'; }
+    .accordion[open] summary::after { content:'⌃'; }
+    .materials-list { list-style:none; padding-left:0; }
+    .materials-list li::before { content:'✓'; color:var(--green); margin-right:.55rem; }
+    dialog { color:var(--ink); border:1px solid var(--line); border-radius:1rem; background:#fff; width:min(36rem, calc(100% - 2rem)); max-height:calc(100dvh - 2rem); padding:1.25rem; }
+    dialog::backdrop { background:#222e2466; }
+    .dialog-head { display:flex; justify-content:space-between; align-items:start; gap:1rem; }
+    .dialog-head button { padding:.2rem .65rem; }
+    .examples { display:grid; gap:.65rem; padding:0; list-style:none; }
+    .examples li { display:flex; align-items:center; gap:.75rem; margin:0; }
+    .examples strong { display:block; }
+    .chair-comparison { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; }
+    .sample-photo { position:relative; overflow:hidden; width:100%; aspect-ratio:4/3; background:var(--sage); border-radius:.55rem; }
+    .sample-photo::before { content:''; position:absolute; inset:50% 0 auto; transform:translateY(-50%); aspect-ratio:2/3; background:url('./explore-examples.png') var(--x,0%) var(--y,0%)/300% 200%; }
+    .examples .sample-photo { flex:none; width:4.25rem; }
+    .sustainability-photo { aspect-ratio:2.4; }
+    .how li { margin-bottom:.8rem; }
+    .how strong { display:block; }
+    .actions { display:flex; flex-wrap:wrap; gap:.65rem; margin-top:1.25rem; }
+    .error { background:#fff0e9; color:#842d19; border-radius:.6rem; padding:.75rem 1rem; }
+    .section { margin-top:1.5rem; }
+    figure { margin:0; min-width:0; }
+    figure img, .preview-placeholder { display:block; width:100%; aspect-ratio:4/3; object-fit:contain; background:var(--sage); border-radius:.65rem; }
+    .preview-placeholder { display:grid; place-items:center; text-align:center; padding:1rem; }
+    figcaption { margin-top:.45rem; }
+    .prompt { background:var(--paper); border-radius:.65rem; padding:1rem; white-space:pre-wrap; overflow-wrap:anywhere; }
+    li { margin-bottom:.45rem; overflow-wrap:anywhere; }
+    @media (max-width:48rem) {
+      .card-grid { grid-template-columns:1fr; }
+      .shell, .shell[data-expanded] { padding-left:0; }
+      .sidebar { display:none; }
+      .shell[data-mobile-open] .sidebar { display:block; width:min(16rem,84vw); }
+      .shell[data-mobile-open] .drawer-backdrop { display:block; position:fixed; inset:0; z-index:1; background:#222e2455; }
+      .shell[data-mobile-open] :is(.nav-caption,.rail-tagline) { display:block; }
+      .shell[data-mobile-open] .rail-button { justify-content:flex-start; }
+      .shell[data-mobile-open] .rail-button span { display:inline; }
+      .menu-toggle { display:inline-flex; }
+      .bar-start { display:grid; grid-template-columns:2.5rem 1fr 2.5rem; width:100%; text-align:center; }
+      .brand { align-self:center; }
+      .stage-icon { width:1.15rem; height:1.15rem; margin:auto; fill:none; stroke:var(--green); stroke-width:1.55; stroke-linecap:round; stroke-linejoin:round; }
+      .view-name { display:none; }
+      .header-reset { display:none; }
+      #preference-picker { margin:auto 0 0; width:100%; max-width:none; border-radius:1rem 1rem 0 0; }
+    }
+    @media (max-width:34rem) { .fields,.comparison,.guide { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <svg hidden xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M5 16C3 8 12 4 20 4c0 8-4 17-12 15M4 21l10-10"/></symbol>
+    <symbol id="icon-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v10h14V10M10 20v-6h4v6"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></symbol>
+    <symbol id="icon-ideas" viewBox="0 0 24 24"><path d="M12 2v5m0 10v5M2 12h5m10 0h5M5 5l3 3m8 8 3 3M5 19l3-3m8-8 3-3"/></symbol>
+    <symbol id="icon-preview" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1"/><path d="m3 17 5-4 4 3 4-5 5 6"/></symbol>
+    <symbol id="icon-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12M4 6h.1M4 12h.1M4 18h.1"/></symbol>
+  </svg>
+  <div class="shell" id="shell">
+  <div class="drawer-backdrop" id="drawer-backdrop" aria-hidden="true"></div>
+  <aside class="sidebar" id="sidebar">
+    <nav aria-label="SecondLife AI">
+      <button class="rail-button rail-brand" type="button" data-view="home" aria-label="SecondLife AI homepage" title="SecondLife AI homepage"><svg aria-hidden="true"><use href="#icon-leaf"/></svg><span>SecondLife AI</span></button>
+      <button class="rail-button" id="toggle-sidebar" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Expand sidebar" title="Expand sidebar"><svg aria-hidden="true"><use href="#icon-panel"/></svg><span id="sidebar-toggle-label">Expand sidebar</span></button>
+      <p class="nav-caption">Workspace</p>
+      <button class="rail-button" type="button" data-view="home" data-current aria-label="Homepage" title="Homepage"><svg aria-hidden="true"><use href="#icon-home"/></svg><span>Homepage</span></button>
+      <button class="rail-button" type="button" data-view="preferences" data-current aria-label="Upload and preferences" title="Upload and preferences"><svg aria-hidden="true"><use href="#icon-upload"/></svg><span>Upload and preferences</span></button>
+      <button class="rail-button" type="button" data-view="recommendations" data-current aria-label="Recommendations" title="Recommendations" disabled><svg aria-hidden="true"><use href="#icon-ideas"/></svg><span>Recommendations</span></button>
+      <button class="rail-button" type="button" data-view="result" data-current aria-label="Transformation and DIY" title="Transformation and DIY" disabled><svg aria-hidden="true"><use href="#icon-leaf"/></svg><span>Transformation &amp; DIY</span></button>
+      <hr>
+      <p class="nav-caption">Explore</p>
+      <button class="rail-button" type="button" data-panel="inspiration" aria-haspopup="dialog" aria-label="Inspiration" title="Inspiration"><svg aria-hidden="true"><use href="#icon-preview"/></svg><span>Inspiration</span></button>
+      <button class="rail-button" type="button" data-panel="how" aria-haspopup="dialog" aria-label="How it works" title="How it works"><svg aria-hidden="true"><use href="#icon-list"/></svg><span>How it works</span></button>
+      <button class="rail-button" type="button" data-panel="sustainability" aria-haspopup="dialog" aria-label="Sustainability" title="Sustainability"><svg aria-hidden="true"><use href="#icon-leaf"/></svg><span>Sustainability</span></button>
+      <p class="rail-tagline">Old things. New possibilities.</p>
+    </nav>
+  </aside>
+  <header id="page-header"><div class="bar">
+    <div class="bar-start">
+      <button class="menu-toggle secondary" id="mobile-menu" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation"><svg aria-hidden="true"><use href="#icon-panel"/></svg></button>
+      <span class="brand">SecondLife AI</span>
+      <svg class="stage-icon" aria-hidden="true"><use id="stage-icon" href="#icon-home"/></svg>
+    </div>
+    <span class="view-name" id="view-name">Homepage</span>
+    <button class="secondary header-reset" id="header-reset" type="button" data-reset hidden>New transformation</button>
+  </div></header>
+  <main id="main-content">
+    <p id="error" class="error narrow" role="alert" hidden></p>
+    <section id="home" aria-labelledby="home-title">
+      <div class="intro">
+        <h1 id="home-title" tabindex="-1">What will you give a second life?</h1>
+        <p>Upload a photo of something you already own and get three practical redesign ideas.</p>
+      </div>
+      <div class="panel narrow">
+        <p class="notice" id="privacy">Google Gemini processes your photo and preferences. Google may use free-tier submissions to improve its products. SecondLife AI does not store your photo. Exclude people, private documents, financial information, and sensitive details about your home.</p>
+        <div class="drop" id="drop">
+          <h3>Add a photo</h3>
+          <p class="muted" id="file-info">Drag a photo here or browse files. JPG, PNG, or WebP up to 5 MB.</p>
+          <input class="file-input" id="photo" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="privacy file-info">
+          <label for="photo" class="button">Browse files</label>
+        </div>
+      </div>
+    </section>
+    <section id="preferences" class="narrow" aria-labelledby="preferences-title" hidden>
+      <div class="intro"><h2 id="preferences-title" tabindex="-1">Make it yours.</h2><p>Choose a few preferences to guide the redesign.</p></div>
+      <form id="preferences-form" class="panel">
+        <div class="photo-row"><img id="thumbnail" alt="Uploaded household object"><div><strong id="filename"></strong><button type="button" class="secondary" id="change-photo">Change photo</button></div></div>
+        <div class="field"><label for="condition">Object condition</label><select id="condition"><option>Old but usable</option><option>Good condition</option><option>Slightly damaged</option><option>Not sure</option></select></div>
+        <div class="fields">
+          <div class="field"><label for="style">Preferred style</label><select id="style"><option>Minimalist</option><option>Modern</option><option>Vintage</option><option>Japandi</option><option>Industrial</option><option>Bohemian</option><option>Creative</option><option>Surprise me</option></select></div>
+          <div class="field"><label for="budget">Maximum budget</label><select id="budget"><option value="0">฿0 · existing materials</option><option value="100">฿1–100</option><option value="500" selected>฿101–500</option><option value="1000">฿501–1,000</option><option value="custom">Custom amount</option></select></div>
+        </div>
+        <div class="field" id="custom-field" hidden><label for="custom">Maximum in Thai baht</label><input id="custom" type="number" min="0" max="9007199254740991" step="1" disabled></div>
+        <details class="panel accordion"><summary>Advanced preferences</summary>
+          <fieldset class="field"><legend>DIY difficulty</legend><div class="difficulty-options">
+            <label><input type="radio" name="difficulty" value="Easy" checked>Easy</label>
+            <label><input type="radio" name="difficulty" value="Medium">Medium</label>
+            <label><input type="radio" name="difficulty" value="Hard">Hard</label>
+          </div></fieldset>
+          <div class="field"><label for="materials">Materials you already have</label><input id="materials" placeholder="e.g. Paint, glue, fabric" maxlength="500"></div>
+        </details>
+        <div class="actions"><button id="analyze" type="submit">Generate redesign ideas</button><button type="button" class="secondary" id="back-home">Back</button></div>
+        <p id="analysis-status" role="status"></p>
+      </form>
+    </section>
+    <section id="recommendations" aria-labelledby="recommendations-title" hidden>
+      <div class="intro"><h2 id="recommendations-title" tabindex="-1">Discover new possibilities.</h2><p>Choose an idea to see the DIY guide and visualization prompt.</p></div>
+      <div class="photo-row summary-photo"><img id="recommendations-photo" alt="Uploaded object"><div><strong id="recommendations-file"></strong><span id="recommendations-preferences"></span></div><button type="button" class="secondary" id="edit">Edit</button></div>
+      <div id="ideas" class="card-grid"></div>
+      <details class="panel section"><summary>What the AI noticed</summary><h4>Observations</h4><ul id="observations"></ul><h4>Assumptions to verify</h4><ul id="assumptions"></ul></details>
+      <div class="actions"><button type="button" class="secondary" data-reset>Upload another object</button></div>
+    </section>
+    <section id="result" aria-labelledby="result-title" hidden>
+      <div class="intro"><h2 id="result-title" tabindex="-1"></h2><p id="description"></p></div>
+      <dl class="metrics"><div><dt>Estimated cost</dt><dd id="result-cost"></dd></div><div><dt>Time</dt><dd id="result-time"></dd></div><div><dt>Difficulty</dt><dd id="result-difficulty"></dd></div></dl>
+      <div class="panel">
+        <div class="comparison" id="comparison" tabindex="-1" role="group" aria-label="Before and after comparison">
+          <figure><figcaption>Before · Original object</figcaption><img id="original" alt="Original object"></figure>
+          <figure><figcaption>After · Illustrative preview</figcaption><div id="preview-placeholder" class="preview-placeholder">Upload an external preview to compare it with your original photo.</div><img id="preview" alt="User-uploaded conceptual redesign preview" hidden></figure>
+        </div>
+        <details class="section" id="external" open><summary>Create an external visualization</summary>
+          <p>Copy the prompt into an image-editing tool that accepts a reference photo. Add your original photo in that tool, then save its output and upload it here. Check the external tool’s privacy settings before sharing your photo.</p>
+          <pre class="prompt" id="prompt"></pre>
+          <div class="actions">
+            <button type="button" id="copy">Copy prompt</button>
+            <input class="file-input" id="preview-file" type="file" accept="image/jpeg,image/png,image/webp">
+            <label for="preview-file" class="button secondary">Upload external preview</label>
+            <button type="button" class="secondary" id="remove-preview" hidden>Remove preview</button>
+          </div>
+          <p id="preview-status" role="status"></p>
+        </details>
+      </div>
+      <div class="section" id="diy-guide" role="group" aria-label="DIY guide">
+        <div class="safety-callout"><strong>Check the object before you begin</strong><p>A photo cannot confirm strength, size, or materials. Stop if the object is damaged or unsafe.</p><ul id="safety"></ul></div>
+        <details class="panel accordion" id="materials-panel"><summary>Materials</summary><ul class="materials-list" id="result-materials"></ul></details>
+        <details class="panel accordion" id="instructions-panel"><summary>DIY instructions</summary><ol id="steps"></ol></details>
+      </div>
+      <div class="actions"><button type="button" class="secondary" id="another">Choose another idea</button><button type="button" class="secondary" data-reset>Upload another object</button></div>
+    </section>
+  </main>
+  <dialog id="inspiration" aria-labelledby="inspiration-title">
+    <div class="dialog-head"><h3 id="inspiration-title">Inspiration</h3><form method="dialog"><button class="secondary" aria-label="Close Inspiration">×</button></form></div>
+    <p>A few things everyday objects can become.</p>
+    <h4>Chair restoration</h4>
+    <div class="chair-comparison">
+      <figure><div class="sample-photo" role="img" aria-label="Worn wooden chair"></div><figcaption>Before</figcaption></figure>
+      <figure><div class="sample-photo" style="--x:50%" role="img" aria-label="The chair refreshed with sage paint"></div><figcaption>Illustrative after</figcaption></figure>
+    </div>
+    <ul class="examples">
+      <li><div class="sample-photo" style="--x:100%" aria-hidden="true"></div><strong>Crate planter</strong></li>
+      <li><div class="sample-photo" style="--y:100%" aria-hidden="true"></div><strong>Glass jar vase</strong></li>
+      <li><div class="sample-photo" style="--x:50%;--y:100%" aria-hidden="true"></div><strong>Linen organizer</strong></li>
+    </ul>
+  </dialog>
+  <dialog id="how" aria-labelledby="how-title">
+    <div class="dialog-head"><h3 id="how-title">How it works</h3><form method="dialog"><button class="secondary" aria-label="Close How it works">×</button></form></div>
+    <ol class="how">
+      <li><strong>Upload a photo</strong>Choose a clear photo of one object.</li>
+      <li><strong>Add preferences</strong>Set the condition, style, and budget that work for you.</li>
+      <li><strong>Compare three ideas</strong>Pick a redesign you would like to try.</li>
+      <li><strong>Use the DIY guide</strong>Check the object and follow the steps.</li>
+    </ol>
+  </dialog>
+  <dialog id="sustainability" aria-labelledby="sustainability-title">
+    <div class="dialog-head"><h3 id="sustainability-title">Sustainability</h3><form method="dialog"><button class="secondary" aria-label="Close Sustainability">×</button></form></div>
+    <div class="sample-photo sustainability-photo section" style="--x:100%;--y:100%" role="img" aria-label="A wooden crate and linen cloth ready to be reused"></div>
+    <p>Reuse what you already have, try affordable ideas, and give useful objects more time in your home.</p>
+  </dialog>
+  <dialog id="preference-picker" aria-labelledby="picker-title">
+    <div class="dialog-head"><h3 id="picker-title"></h3><form method="dialog"><button class="secondary" aria-label="Close preference picker">×</button></form></div>
+    <div class="picker-options" id="picker-options"></div>
+  </dialog>
+  </div>
+  <script type="module">
+    const byId = (id) => document.getElementById(id);
+    const views = {
+      home: { title: 'Homepage', icon: 'home' },
+      preferences: { title: 'Upload & Preferences', icon: 'upload' },
+      recommendations: { title: 'Recommendations', icon: 'ideas' },
+      result: { title: 'Transformation & DIY', icon: 'leaf' },
+    };
+    const navigation = [...document.querySelectorAll('[data-view]')];
+    const shell = byId('shell');
+    const mobileLayout = window.matchMedia('(max-width:48rem)');
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const sourceLimit = 5_000_000;
+    const uploadTarget = 3_000_000;
+    const form = byId('preferences-form');
+    const analyze = byId('analyze');
+    const pickers = new Map();
+    let photo;
+    let originalUrl;
+    let previewUrl;
+    let request;
+    let photoVersion = 0;
+    let hasRecommendations = false;
+    let hasSelection = false;
+    let currentView = 'home';
+
+    function showError(message = '') {
+      byId('error').textContent = message;
+      byId('error').hidden = !message;
+      if (message && byId('error').getBoundingClientRect().top < 0) {
+        byId('error').scrollIntoView({ block: 'start' });
+      }
+    }
+
+    function updateNavigation() {
+      for (const button of navigation) {
+        const view = button.dataset.view;
+        button.disabled = (view === 'recommendations' && !hasRecommendations) || (view === 'result' && !hasSelection);
+        if (button.hasAttribute('data-current') && view === currentView) button.setAttribute('aria-current', 'page');
+        else button.removeAttribute('aria-current');
+      }
+      byId('view-name').textContent = views[currentView].title;
+      byId('stage-icon').setAttribute('href', '#icon-' + views[currentView].icon);
+      byId('header-reset').hidden = currentView !== 'result';
+    }
+
+    function setMobileMenu(open, returnFocus = false) {
+      shell.toggleAttribute('data-mobile-open', open);
+      byId('main-content').inert = open;
+      byId('page-header').inert = open;
+      byId('mobile-menu').setAttribute('aria-expanded', String(open));
+      byId('mobile-menu').setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+      const toggle = byId('toggle-sidebar');
+      if (mobileLayout.matches) {
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', 'Close navigation');
+        toggle.title = 'Close navigation';
+        byId('sidebar-toggle-label').textContent = 'Close navigation';
+      }
+      if (open) toggle.focus();
+      if (returnFocus) byId('mobile-menu').focus();
+    }
+
+    function show(section) {
+      showError();
+      currentView = section;
+      for (const id of Object.keys(views)) byId(id).hidden = id !== section;
+      setMobileMenu(false);
+      updateNavigation();
+      byId(section + '-title').focus({ preventScroll: true });
+      window.scrollTo(0, 0);
+    }
+
+    function validatePhoto(file) {
+      if (!allowedTypes.includes(file.type) || !file.size) throw new Error('Choose a JPG, PNG, or WebP image.');
+      if (file.size > sourceLimit) throw new Error('Choose a photo of 5 MB or less.');
+    }
+
+    function clearPreview() {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = undefined;
+      byId('preview').removeAttribute('src');
+      byId('preview').hidden = true;
+      byId('preview-placeholder').hidden = false;
+      byId('remove-preview').hidden = true;
+      byId('preview-status').textContent = '';
+    }
+
+    function syncBudget() {
+      const custom = byId('budget').value === 'custom';
+      byId('custom-field').hidden = !custom;
+      byId('custom').disabled = !custom;
+      byId('custom').required = custom;
+    }
+
+    function reset() {
+      photoVersion += 1;
+      request?.abort();
+      if (originalUrl) URL.revokeObjectURL(originalUrl);
+      originalUrl = undefined;
+      photo = undefined;
+      hasRecommendations = false;
+      hasSelection = false;
+      byId('original').removeAttribute('src');
+      byId('thumbnail').removeAttribute('src');
+      byId('recommendations-photo').removeAttribute('src');
+      clearPreview();
+      form.reset();
+      for (const update of pickers.values()) update();
+      syncBudget();
+      show('home');
+    }
+
+    async function selectPhoto(file) {
+      if (!file) return;
+      const version = ++photoVersion;
+      try {
+        validatePhoto(file);
+        const bitmap = await createImageBitmap(file).catch(() => { throw new Error('This photo could not be opened. Try another image.'); });
+        bitmap.close();
+        if (version !== photoVersion) return;
+        request?.abort();
+        if (originalUrl) URL.revokeObjectURL(originalUrl);
+        photo = file;
+        hasRecommendations = false;
+        hasSelection = false;
+        clearPreview();
+        originalUrl = URL.createObjectURL(file);
+        byId('thumbnail').src = originalUrl;
+        byId('filename').textContent = file.name;
+        show('preferences');
+      } catch (error) {
+        if (version === photoVersion) showError(error.message);
+      }
+    }
+
+    async function preparePhoto(file) {
+      const bitmap = await createImageBitmap(file);
+      try {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d', { alpha: false });
+        if (!context) throw new Error('This browser could not prepare the photo.');
+        let scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+          canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+          context.fillStyle = '#fff';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.88));
+          if (blob?.size && blob.size <= uploadTarget) return blob;
+          scale *= 0.7;
+        }
+        throw new Error('The photo could not be resized. Try a smaller image.');
+      } finally {
+        bitmap.close();
+      }
+    }
+
+    function base64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = () => reject(new Error('The photo could not be read.'));
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function list(id, items, emptyMessage) {
+      const entries = items.length || !emptyMessage ? items : [emptyMessage];
+      byId(id).replaceChildren(...entries.map((text) => {
+        const item = document.createElement('li');
+        item.textContent = text;
+        return item;
+      }));
+    }
+
+    const price = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 2 });
+
+    function duration(minutes) {
+      const hours = Math.floor(minutes / 60);
+      const remainder = minutes % 60;
+      if (!hours) return minutes + ' min';
+      return hours + (hours === 1 ? ' hour' : ' hours') + (remainder ? ' ' + remainder + ' min' : '');
+    }
+
+    function showIdea(idea) {
+      hasSelection = true;
+      clearPreview();
+      byId('original').src = originalUrl;
+      byId('result-title').textContent = idea.title;
+      byId('description').textContent = idea.description;
+      byId('result-cost').textContent = price.format(idea.estimatedCostThb);
+      byId('result-time').textContent = duration(idea.estimatedMinutes);
+      byId('result-difficulty').textContent = idea.difficulty;
+      byId('materials-panel').open = false;
+      byId('instructions-panel').open = false;
+      byId('prompt').textContent = idea.imageEditingPrompt;
+      byId('external').open = true;
+      list('result-materials', idea.materials, 'No additional materials listed.');
+      list('safety', idea.safetyNotes);
+      list('steps', idea.diySteps);
+      show('result');
+    }
+
+    function showIdeas(data, preferences) {
+      hasRecommendations = true;
+      hasSelection = false;
+      clearPreview();
+      byId('recommendations-photo').src = originalUrl;
+      byId('recommendations-file').textContent = photo.name;
+      byId('recommendations-preferences').textContent = preferences.style + ' · Up to ' + price.format(preferences.budgetThb);
+      list('observations', data.observations);
+      list('assumptions', data.assumptions, 'No assumptions listed.');
+      byId('ideas').replaceChildren(...data.ideas.map((idea) => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        const title = document.createElement('h3');
+        title.textContent = idea.title;
+        const description = document.createElement('p');
+        description.textContent = idea.description;
+        const metadata = document.createElement('p');
+        metadata.className = 'facts';
+        metadata.textContent = [price.format(idea.estimatedCostThb), duration(idea.estimatedMinutes), idea.difficulty].join(' · ');
+        const select = document.createElement('button');
+        select.type = 'button';
+        select.textContent = 'Select this design';
+        select.setAttribute('aria-label', 'Select ' + idea.title);
+        select.addEventListener('click', () => showIdea(idea));
+        card.append(title, description, metadata, select);
+        return card;
+      }));
+      show(currentView === 'preferences' || currentView === 'result' ? 'recommendations' : currentView);
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (request || !photo) return;
+      const condition = byId('condition').value.trim();
+      if (!condition) {
+        showError('Enter the condition of the object.');
+        byId('condition').focus();
+        return;
+      }
+      const budget = byId('budget').value;
+      const payload = {
+        condition,
+        style: byId('style').value,
+        budgetThb: Number(budget === 'custom' ? byId('custom').value : budget),
+        materials: byId('materials').value.trim(),
+        difficulty: form.elements.difficulty.value,
+      };
+      showError();
+      const controller = new AbortController();
+      request = controller;
+      analyze.disabled = true;
+      byId('analysis-status').textContent = 'Preparing your photo…';
+      try {
+        const image = await preparePhoto(photo);
+        payload.imageBase64 = await base64(image);
+        payload.mimeType = image.type;
+        controller.signal.throwIfAborted();
+        byId('analysis-status').textContent = 'Analyzing your photo and generating three ideas…';
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        }).catch((error) => {
+          if (controller.signal.aborted) throw error;
+          throw new Error('Could not reach the analysis service. Check your connection and try again.');
+        });
+        const data = await response.json().catch(() => null);
+        controller.signal.throwIfAborted();
+        if (!response.ok) {
+          const messages = {
+            413: 'The resized photo is still too large. Try a smaller photo.',
+            422: 'Try a clear photo of a safe household object.',
+            429: 'The analysis limit has been reached. Try again shortly.',
+          };
+          throw new Error(data?.error?.message || messages[response.status] || 'Photo analysis is temporarily unavailable. Please try again.');
+        }
+        if (!Array.isArray(data?.ideas) || data.ideas.length !== 3 ||
+            !Array.isArray(data.observations) || !Array.isArray(data.assumptions)) {
+          throw new Error('The analysis service returned incomplete results. Please try again.');
+        }
+        showIdeas(data, payload);
+      } catch (error) {
+        if (!controller.signal.aborted) showError(error.message);
+      } finally {
+        request = undefined;
+        analyze.disabled = false;
+        byId('analysis-status').textContent = '';
+      }
+    });
+
+    const input = byId('photo');
+    input.addEventListener('change', () => {
+      selectPhoto(input.files[0]);
+      input.value = '';
+    });
+    const drop = byId('drop');
+    drop.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      drop.setAttribute('data-drag', '');
+    });
+    drop.addEventListener('dragleave', (event) => {
+      if (!drop.contains(event.relatedTarget)) drop.removeAttribute('data-drag');
+    });
+    drop.addEventListener('drop', (event) => {
+      event.preventDefault();
+      drop.removeAttribute('data-drag');
+      selectPhoto(event.dataTransfer.files[0]);
+    });
+    byId('change-photo').addEventListener('click', () => input.click());
+    byId('budget').addEventListener('change', syncBudget);
+    const preferenceDialog = byId('preference-picker');
+    for (const id of ['condition', 'style', 'budget']) {
+      const select = byId(id);
+      const label = select.labels[0];
+      const trigger = document.createElement('button');
+      trigger.id = id + '-picker-trigger';
+      trigger.type = 'button';
+      trigger.className = 'picker-trigger';
+      trigger.setAttribute('aria-haspopup', 'dialog');
+      trigger.setAttribute('aria-controls', 'preference-picker');
+      const update = () => {
+        trigger.textContent = select.selectedOptions[0].textContent;
+        trigger.setAttribute('aria-label', label.textContent + ': ' + trigger.textContent);
+      };
+      trigger.addEventListener('click', () => {
+        byId('picker-title').textContent = label.textContent;
+        const options = [...select.options].map((option) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = option.textContent;
+          button.setAttribute('aria-pressed', String(option.selected));
+          button.addEventListener('click', () => {
+            select.value = option.value;
+            update();
+            if (id === 'budget') syncBudget();
+            preferenceDialog.close();
+            if (id === 'budget' && option.value === 'custom') byId('custom').focus();
+          });
+          return button;
+        });
+        byId('picker-options').replaceChildren(...options);
+        preferenceDialog.showModal();
+        options[select.selectedIndex]?.focus();
+      });
+      update();
+      pickers.set(id, update);
+      select.after(trigger);
+      select.hidden = true;
+      label.htmlFor = trigger.id;
+    }
+    byId('edit').addEventListener('click', () => show('preferences'));
+    byId('back-home').addEventListener('click', () => show('home'));
+    byId('another').addEventListener('click', () => { clearPreview(); show('recommendations'); });
+    document.querySelectorAll('[data-reset]').forEach((button) => button.addEventListener('click', reset));
+
+    function syncSidebar() {
+      if (mobileLayout.matches) {
+        setMobileMenu(false);
+        return;
+      }
+      setMobileMenu(false);
+      const expanded = shell.hasAttribute('data-expanded');
+      const label = expanded ? 'Collapse sidebar' : 'Expand sidebar';
+      const toggle = byId('toggle-sidebar');
+      toggle.setAttribute('aria-expanded', String(expanded));
+      toggle.setAttribute('aria-label', label);
+      toggle.title = label;
+      byId('sidebar-toggle-label').textContent = label;
+    }
+
+    byId('toggle-sidebar').addEventListener('click', () => {
+      if (mobileLayout.matches) setMobileMenu(false, true);
+      else {
+        shell.toggleAttribute('data-expanded');
+        syncSidebar();
+      }
+    });
+    byId('mobile-menu').addEventListener('click', () => setMobileMenu(!shell.hasAttribute('data-mobile-open')));
+    byId('drawer-backdrop').addEventListener('click', () => setMobileMenu(false, true));
+    mobileLayout.addEventListener('change', syncSidebar);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && shell.hasAttribute('data-mobile-open')) setMobileMenu(false, true);
+    });
+    for (const button of navigation) {
+      button.addEventListener('click', () => {
+        const { view } = button.dataset;
+        if (view === 'preferences' && !photo) {
+          show('home');
+          input.click();
+          return;
+        }
+        show(view);
+      });
+    }
+    for (const button of document.querySelectorAll('[data-panel]')) {
+      const dialog = byId(button.dataset.panel);
+      button.addEventListener('click', () => {
+        if (mobileLayout.matches) setMobileMenu(false, true);
+        dialog.showModal();
+      });
+      dialog.addEventListener('click', (event) => {
+        if (event.target !== dialog) return;
+        const bounds = dialog.getBoundingClientRect();
+        if (event.clientX < bounds.left || event.clientX > bounds.right ||
+            event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
+      });
+    }
+    syncSidebar();
+    updateNavigation();
+
+    byId('copy').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(byId('prompt').textContent);
+        byId('preview-status').textContent = 'Prompt copied.';
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(byId('prompt'));
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        byId('preview-status').textContent = 'Prompt selected. Use your browser’s copy command.';
+      }
+    });
+
+    byId('preview-file').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      event.target.value = '';
+      if (!file) return;
+      let candidateUrl;
+      try {
+        validatePhoto(file);
+        candidateUrl = URL.createObjectURL(file);
+      } catch (error) {
+        byId('preview-status').textContent = error.message;
+        return;
+      }
+      clearPreview();
+      previewUrl = candidateUrl;
+      const preview = byId('preview');
+      preview.onerror = () => {
+        if (previewUrl !== candidateUrl) return;
+        clearPreview();
+        byId('preview-status').textContent = 'This preview could not be opened. Try another image.';
+      };
+      preview.onload = () => {
+        if (previewUrl !== candidateUrl) return;
+        preview.hidden = false;
+        byId('preview-placeholder').hidden = true;
+        byId('remove-preview').hidden = false;
+        byId('preview-status').textContent = 'External preview added.';
+      };
+      preview.src = candidateUrl;
+    });
+    byId('remove-preview').addEventListener('click', clearPreview);
+  </script>
+</body>
+</html>
